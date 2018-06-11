@@ -1,4 +1,16 @@
-language: java
+language: cpp
+
+matrix:
+  include:
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-7
+      env:
+        - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
 
 before_install:
   - wget http://195.176.181.79/nodeprof.js/labsjdk-8u161.tgz
