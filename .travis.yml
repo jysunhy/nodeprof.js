@@ -12,6 +12,7 @@ before_script:
 script:
   - mx sforceimports
   - mx build
-  - mx test
+  - mx jalangi src/ch.usi.inf.nodeprof/js/analysis/basics/invokeTest.js src/ch.usi.inf.nodeprof.test/js/minitests/element.js 
+
 
 
