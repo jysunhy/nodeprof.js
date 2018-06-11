@@ -13,6 +13,7 @@ script:
   - mx sforceimports
   - mx build
   - mx jalangi src/ch.usi.inf.nodeprof/js/analysis/basics/invokeTest.js src/ch.usi.inf.nodeprof.test/js/minitests/element.js 
+  - mx test
 
 
 

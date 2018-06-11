@@ -141,6 +141,7 @@ class OutputCapture:
     def __init__(self):
         self.data = ''
     def __call__(self, data):
+        print ("test stdout: "+data);
         self.data += data
 
 def runJalangi(args, excl="", out=None, svm=False):
