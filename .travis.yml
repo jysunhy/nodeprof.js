@@ -1,27 +1,34 @@
 language: cpp
 
-matrix:
-  include:
-    - os: linux
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-          packages:
-            - g++-5
-      env:
-        - MATRIX_EVAL="CC=gcc-5 && CXX=g++-5"
+compiler:
+  - clang
+  - gcc
 
 before_install:
+  # g++
+  - if [ "$CXX" == "g++" ]; then sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test; fi
+
+  # clang
+  - if [ "$CXX" == "clang++" ]; then sudo add-apt-repository -y ppa:h-rayflood/llvm; fi
+
+  - sudo apt-get update -qq
+
   - wget http://195.176.181.79/nodeprof.js/labsjdk-8u161.tgz
   - tar xvf labsjdk-8u161.tgz
   - git clone https://github.com/graalvm/mx.git
 
+install:
+  # g++
+  - if [ "$CXX" = "g++" ]; then sudo apt-get install -qq g++-5; fi
+  - if [ "$CXX" = "g++" ]; then export CXX="g++-5"; fi
+
+  # clang 
+  - if [ "$CXX" == "clang++" ]; then sudo apt-get install --allow-unauthenticated -qq clang-3.9; fi
+  - if [ "$CXX" == "clang++" ]; then export CXX="clang++-3.9"; fi
+
 before_script:
   - export JAVA_HOME=$TRAVIS_BUILD_DIR/labsjdk1.8.0_161-jvmci-0.42
   - export PATH=$PATH:$TRAVIS_BUILD_DIR/mx
-  - export CC=gcc-5
-  - export CXX=g++-5
 
 script:
   - mx sforceimports
