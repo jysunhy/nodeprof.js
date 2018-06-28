@@ -1,3 +1,5 @@
+[![Build Status](https://api.travis-ci.com/Haiyang-Sun/nodeprof.js.svg?branch=master)](https://travis-ci.com/Haiyang-Sun/nodeprof.js)
+
 An efficient instrumentation and profiling framework for [Graal.js](https://github.com/graalvm/graaljs).
 
 ## Getting Started
@@ -39,6 +41,9 @@ The goals of NodeProf are:
 	- haiyang.sun@usi.ch
 	- Università della Svizzera italiana (USI), Lugano, Switzerland
 
+## Publication
+
+* Efficient dynamic analysis for Node.js [link](https://dl.acm.org/citation.cfm?id=3179527)
 
 ## Licence
 
@@ -48,4 +53,4 @@ NodeProf is available under the following license:
 
 ## Acknowledgement
 
-Thanks to Daniele Bonetta and Christian Humer from Oracle Labs for the help during the implementation.
+Thanks to Daniele Bonetta, Alexander Jordan, and Christian Humer from Oracle Labs for the help during the implementation.

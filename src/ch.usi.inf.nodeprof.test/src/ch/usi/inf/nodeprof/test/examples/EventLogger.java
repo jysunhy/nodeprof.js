@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright [2018] [Haiyang Sun, Università della Svizzera Italiana (USI)]
+ * Copyright 2018 Dynamic Analysis Group, Università della Svizzera Italiana (USI)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -75,7 +75,7 @@ public class EventLogger extends TestableNodeProfAnalysis {
                         }
 
                         @Child ReportEntryNode reportNode = ReportEntryNodeGen.create(db, new ReportFactory() {
-                            public Report create(long iid) {
+                            public Report create(int iid) {
                                 return new EventReport(iid);
                             }
                         });
@@ -109,14 +109,14 @@ public class EventLogger extends TestableNodeProfAnalysis {
 
     @Override
     public void printResult() {
-        for (Entry<Long, Report> entry : db.getRecords().entrySet()) {
+        for (Entry<Integer, Report> entry : db.getRecords().entrySet()) {
             EventReport report = (EventReport) entry.getValue();
             Logger.info(Logger.printSourceSectionWithCode(SourceMapping.getSourceSectionForIID(entry.getKey())).append(report.report()));
         }
     }
 
     class EventReport extends Report {
-        public EventReport(long iid) {
+        public EventReport(int iid) {
             super(iid);
         }
 
