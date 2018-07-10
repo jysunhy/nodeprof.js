@@ -1,5 +1,6 @@
 /*******************************************************************************
- * Copyright [2018] [Haiyang Sun, Università della Svizzera Italiana (USI)]
+ * Copyright 2018 Dynamic Analysis Group, Università della Svizzera Italiana (USI)
+ * Copyright (c) 2018, Oracle and/or its affiliates. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,10 +16,12 @@
  *******************************************************************************/
 package ch.usi.inf.nodeprof.jalangi.factory;
 
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.EventContext;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.object.DynamicObject;
+import com.oracle.truffle.js.runtime.GraalJSException;
 import com.oracle.truffle.js.runtime.objects.Undefined;
 
 import ch.usi.inf.nodeprof.handlers.BaseEventHandlerNode;
@@ -26,28 +29,46 @@ import ch.usi.inf.nodeprof.handlers.FunctionRootEventHandler;
 
 public class RootFactory extends AbstractFactory {
 
-    public RootFactory(Object jalangiAnalysis, DynamicObject pre,
-                    DynamicObject post) {
+    protected final DynamicObject builtinPre;
+    protected final DynamicObject builtinPost;
+
+    public RootFactory(Object jalangiAnalysis, DynamicObject pre, DynamicObject post,
+                    DynamicObject builtinPre, DynamicObject builtinPost) {
         super("function", jalangiAnalysis, pre, post);
+        this.builtinPre = builtinPre;
+        this.builtinPost = builtinPost;
+    }
+
+    @TruffleBoundary
+    private static Object parseErrorObject(Throwable exception) {
+        return exception instanceof GraalJSException ? ((GraalJSException) exception).getErrorObject() : exception.getMessage();
     }
 
     @Override
     public BaseEventHandlerNode create(EventContext context) {
         return new FunctionRootEventHandler(context) {
             @Child MakeArgumentArrayNode makeArgs = MakeArgumentArrayNodeGen.create(pre == null ? post : pre, 2, 0);
-            @Child DirectCallNode preCall = createPreCallNode();
-            @Child DirectCallNode postCall = createPostCallNode();
+            @Child DirectCallNode preCall = createDirectCallNode(this.isBuiltin ? builtinPre : pre);
+            @Child DirectCallNode postCall = createDirectCallNode(this.isBuiltin ? builtinPost : post);
 
             @Override
             public void executePre(VirtualFrame frame, Object[] inputs) {
                 if (isRegularExpression())
                     return;
-                if (pre == null) {
-                    return;
+
+                if (this.isBuiltin) {
+                    if (builtinPre != null) {
+                        directCall(preCall, new Object[]{jalangiAnalysis, builtinPre,
+                                        this.getBuiltinName(), getFunction(frame), getReceiver(frame),
+                                        makeArgs.executeArguments(getArguments(frame))}, true, getSourceIID());
+                    }
+                } else {
+                    if (pre != null) {
+                        directCall(preCall, new Object[]{jalangiAnalysis, pre,
+                                        getSourceIID(), getFunction(frame), getReceiver(frame),
+                                        makeArgs.executeArguments(getArguments(frame))}, true, getSourceIID());
+                    }
                 }
-                directCall(preCall, new Object[]{jalangiAnalysis, pre,
-                                getSourceIID(), getFunction(frame), getReceiver(frame),
-                                makeArgs.executeArguments(getArguments(frame)), this.getBuiltinName()}, true);
             }
 
             @Override
@@ -55,26 +76,45 @@ public class RootFactory extends AbstractFactory {
                             Object[] inputs) {
                 if (isRegularExpression())
                     return;
-                if (post == null) {
-                    return;
+
+                if (this.isBuiltin) {
+                    if (builtinPost != null) {
+                        directCall(postCall, new Object[]{jalangiAnalysis, builtinPost,
+                                        this.getBuiltinName(), convertResult(result)
+                        }, false, getSourceIID());
+                    }
+                } else {
+                    if (post != null) {
+                        directCall(postCall, new Object[]{jalangiAnalysis, post,
+                                        getSourceIID(), convertResult(result)
+                        }, false, getSourceIID());
+                    }
                 }
-                directCall(postCall, new Object[]{jalangiAnalysis, post,
-                                getSourceIID(), convertResult(result)
-                }, false);
             }
 
             @Override
-            public void executeExceptional(VirtualFrame frame) {
+            public void executeExceptional(VirtualFrame frame, Throwable exception) {
                 if (isRegularExpression())
                     return;
-                if (post == null) {
-                    return;
+                if (this.isBuiltin) {
+                    if (builtinPost != null) {
+                        Object exceptionValue = parseErrorObject(exception);
+                        directCall(postCall, new Object[]{jalangiAnalysis, builtinPost,
+                                        getSourceIID(), Undefined.instance, exceptionValue == null ? "" : exceptionValue
+
+                        }, false, getSourceIID());
+                    }
+                } else {
+                    if (post != null) {
+                        Object exceptionValue = parseErrorObject(exception);
+                        directCall(postCall, new Object[]{jalangiAnalysis, post,
+                                        getSourceIID(), Undefined.instance, exceptionValue == null ? "" : exceptionValue
+                        }, false, getSourceIID());
+                    }
                 }
-                // TODO add real exceptions
-                directCall(postCall, new Object[]{jalangiAnalysis, post,
-                                getSourceIID(), Undefined.instance
-                }, false);
+
             }
+
         };
     }
 }

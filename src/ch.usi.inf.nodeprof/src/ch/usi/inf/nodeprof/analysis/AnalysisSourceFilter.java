@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright [2018] [Haiyang Sun, Università della Svizzera Italiana (USI)]
+ * Copyright 2018 Dynamic Analysis Group, Università della Svizzera Italiana (USI)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import java.util.List;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.instrumentation.SourceSectionFilter.SourcePredicate;
 import com.oracle.truffle.api.source.Source;
+import com.oracle.truffle.js.runtime.Evaluator;
 
 import ch.usi.inf.nodeprof.utils.GlobalConfiguration;
 import ch.usi.inf.nodeprof.utils.Logger;
@@ -132,11 +133,38 @@ public class AnalysisSourceFilter implements SourcePredicate {
         // if it's an exclusion filter, we include the source by default
         boolean res = filterExcludes;
 
+        boolean isInternal = isInternal(source);
         // use name or path of source depending whether we consider it internal
-        String name = isInternal(source) ? source.getName() : source.getPath();
+
+        boolean isEval = isInternal && source.getName().startsWith(Evaluator.EVAL_AT_SOURCE_NAME_PREFIX);
+        boolean isIndirectEval = isInternal && source.getName().startsWith(Evaluator.FUNCTION_SOURCE_NAME);
+
+        String name;
+        if (isEval) {
+            name = source.getName();
+            int startPos = name.indexOf('(');
+            int endPos = name.indexOf(')');
+            if (startPos > -1 && endPos > -1) {
+                int fileEnd = name.indexOf(':', startPos);
+                if (fileEnd > -1 && fileEnd < endPos) {
+                    endPos = fileEnd;
+                }
+                name = name.substring(startPos + 1, endPos);
+                // TODO, currently there is no way to judge if the eval is called from internal
+                // for the moment, we assume it's not internal
+                isInternal = false;
+            }
+        } else if (isIndirectEval) {
+            name = source.getName();
+            isInternal = false;
+        } else if (isInternal) {
+            name = source.getName();
+        } else {
+            name = source.getPath();
+        }
         assert (name != null);
 
-        if (instrumentInternal || !isInternal(source)) {
+        if (instrumentInternal || !isInternal) {
             // log warning if source does not have a name
             if (name.equals("")) {
                 if (loggedSources.add(source)) {
@@ -154,7 +182,7 @@ public class AnalysisSourceFilter implements SourcePredicate {
                 if (res && source.getLineCount() > 0) {
                     // check if the source code has a special filter string at its beginning
                     CharSequence sourceChars = source.getCharacters();
-                    String sourceHead = sourceChars.subSequence(0, Math.min(sourceChars.length() -1, 1000)).toString().trim();
+                    String sourceHead = sourceChars.subSequence(0, Math.min(sourceChars.length() - 1, 1000)).toString().trim();
                     // should be enough
                     if (sourceHead.contains("DO NOT INSTRUMENT")) {
                         res = false;
@@ -172,7 +200,7 @@ public class AnalysisSourceFilter implements SourcePredicate {
         // debug log (once per source) if filter did something
         if (res != filterExcludes && loggedSources.add(source)) {
             // don't log internal if they are being excluded (there are a lot of them)
-            if (instrumentInternal || !isInternal(source)) {
+            if (instrumentInternal || !isInternal) {
                 Logger.debug("Source filter: " + name + " -> " + (res ? "included" : "excluded") + (this.debugHint.isEmpty() ? "" : (" " + this.debugHint)));
             }
         }

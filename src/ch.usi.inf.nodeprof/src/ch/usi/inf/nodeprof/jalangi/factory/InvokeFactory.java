@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright [2018] [Haiyang Sun, Università della Svizzera Italiana (USI)]
+ * Copyright 2018 Dynamic Analysis Group, Università della Svizzera Italiana (USI)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -49,7 +49,7 @@ public class InvokeFactory extends AbstractFactory {
                                     false,// isMethod
                                     0,// functionIid);
                                     0 // functionSid
-                    }, true);
+                    }, true, getSourceIID());
                 }
             }
 
@@ -65,7 +65,7 @@ public class InvokeFactory extends AbstractFactory {
                                     false,// isMethod
                                     0,// functionIid);
                                     0 // functionSid
-                    }, false);
+                    }, false, getSourceIID());
                 }
             }
         };

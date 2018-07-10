@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright [2018] [Haiyang Sun, Università della Svizzera Italiana (USI)]
+ * Copyright 2018 Dynamic Analysis Group, Università della Svizzera Italiana (USI)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -79,10 +79,10 @@ public class BranchCoverage extends TestableNodeProfAnalysis {
     public void printResult() {
         int idx = 0;
         Logger.info("BranchCoverage analysis finishes.");
-        for (Entry<Long, Report> entry : trueDB.getRecords().entrySet()) {
+        for (Entry<Integer, Report> entry : trueDB.getRecords().entrySet()) {
             Logger.info("BranchCoverage[" + idx++ + "]: True " + entry.getValue().report());
         }
-        for (Entry<Long, Report> entry : falseDB.getRecords().entrySet()) {
+        for (Entry<Integer, Report> entry : falseDB.getRecords().entrySet()) {
             Logger.info("BranchCoverage[" + idx++ + "]: False " + entry.getValue().report());
         }
     }

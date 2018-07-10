@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright [2018] [Haiyang Sun, Università della Svizzera Italiana (USI)]
+ * Copyright 2018 Dynamic Analysis Group, Università della Svizzera Italiana (USI)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,4 +13,4 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-  eval("var a = 0;");
+eval("var a = 0;");

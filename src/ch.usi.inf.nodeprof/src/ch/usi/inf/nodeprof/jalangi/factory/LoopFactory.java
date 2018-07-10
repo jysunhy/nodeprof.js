@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright [2018] [Haiyang Sun, Università della Svizzera Italiana (USI)]
+ * Copyright 2018 Dynamic Analysis Group, Università della Svizzera Italiana (USI)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,7 +38,7 @@ public class LoopFactory extends AbstractFactory {
             public void executePre(VirtualFrame frame, Object[] inputs) {
                 if (pre != null) {
                     directCall(preCall, new Object[]{jalangiAnalysis, pre,
-                                    getSourceIID()}, true);
+                                    getSourceIID()}, true, getSourceIID());
                 }
             }
 
@@ -47,7 +47,7 @@ public class LoopFactory extends AbstractFactory {
                             Object[] inputs) {
                 if (post != null) {
                     directCall(postCall, new Object[]{jalangiAnalysis, post,
-                                    getSourceIID()}, false);
+                                    getSourceIID()}, false, getSourceIID());
                 }
             }
         };

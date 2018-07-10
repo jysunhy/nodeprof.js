@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright [2018] [Haiyang Sun, Università della Svizzera Italiana (USI)]
+ * Copyright 2018 Dynamic Analysis Group, Università della Svizzera Italiana (USI)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.EventContext;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.object.DynamicObject;
+import com.oracle.truffle.js.runtime.objects.Undefined;
 
 import ch.usi.inf.nodeprof.handlers.BaseEventHandlerNode;
 import ch.usi.inf.nodeprof.handlers.EvalEventHandler;
@@ -40,7 +41,7 @@ public class EvalFactory extends AbstractFactory {
             public void executePre(VirtualFrame frame, Object[] inputs) {
                 if (pre != null) {
                     directCall(preCall, new Object[]{jalangiAnalysis, pre,
-                                    getSourceIID(), getCode(inputs), true}, true);
+                                    getSourceIID(), getCode(inputs), Undefined.instance}, true, getSourceIID());
                 }
             }
 
@@ -48,8 +49,8 @@ public class EvalFactory extends AbstractFactory {
             public void executePost(VirtualFrame frame, Object result,
                             Object[] inputs) {
                 if (post != null) {
-                    directCall(postCall, new Object[]{jalangiAnalysis, pre,
-                                    getSourceIID(), getCode(inputs), true}, false);
+                    directCall(postCall, new Object[]{jalangiAnalysis, post,
+                                    getSourceIID(), getCode(inputs), Undefined.instance}, false, getSourceIID());
                 }
             }
         };

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright [2018] [Haiyang Sun, Università della Svizzera Italiana (USI)]
+ * Copyright 2018 Dynamic Analysis Group, Università della Svizzera Italiana (USI)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -53,7 +53,7 @@ public class CountObjectAllocation extends TestableNodeProfAnalysis {
     @Override
     public void printResult() {
         Logger.info("CountObjectAllocation analysis finishes.");
-        for (Entry<Long, Report> entry : db.getRecords().entrySet()) {
+        for (Entry<Integer, Report> entry : db.getRecords().entrySet()) {
             Logger.info("CountObjectAllocation " + entry.getValue().report());
         }
     }

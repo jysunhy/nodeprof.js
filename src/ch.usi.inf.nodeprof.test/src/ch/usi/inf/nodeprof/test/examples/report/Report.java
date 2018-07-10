@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright [2018] [Haiyang Sun, Università della Svizzera Italiana (USI)]
+ * Copyright 2018 Dynamic Analysis Group, Università della Svizzera Italiana (USI)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,13 +16,13 @@
 package ch.usi.inf.nodeprof.test.examples.report;
 
 public abstract class Report {
-    protected final long iid;
+    protected final int iid;
 
-    public Report(long iid) {
+    public Report(int iid) {
         this.iid = iid;
     }
 
-    public long getSourceIId() {
+    public int getSourceIId() {
         return iid;
     }
 

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright [2018] [Haiyang Sun, Università della Svizzera Italiana (USI)]
+ * Copyright 2018 Dynamic Analysis Group, Università della Svizzera Italiana (USI)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
+//DO NOT INSTRUMENT
 ((function(sandbox){
   function TestEval() {
     this.cache = null;
@@ -28,6 +29,7 @@
       this.cache = func;
     }
     this.invokeFun = function(iid, func) {
+      console.log("invoke func:"+func);
       if(this.cache == func) {
         console.log("found invocation of new Function at "+J$.iidToLocation(iid)+" of func "+func);
       }

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright [2018] [Haiyang Sun, Università della Svizzera Italiana (USI)]
+ * Copyright 2018 Dynamic Analysis Group, Università della Svizzera Italiana (USI)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,7 +40,7 @@ public class UnaryFactory extends AbstractFactory {
             public void executePre(VirtualFrame frame, Object[] inputs) {
                 if (pre != null) {
                     directCall(preCall, new Object[]{jalangiAnalysis, pre,
-                                    getSourceIID(), getOp(), getValue(inputs),}, true);
+                                    getSourceIID(), getOp(), getValue(inputs),}, true, getSourceIID());
                 }
             }
 
@@ -50,7 +50,7 @@ public class UnaryFactory extends AbstractFactory {
                 if (post != null) {
                     directCall(postCall, new Object[]{jalangiAnalysis, post,
                                     getSourceIID(), getOp(), getValue(inputs),
-                                    convertResult(result)}, false);
+                                    convertResult(result)}, false, getSourceIID());
                 }
             }
         };
