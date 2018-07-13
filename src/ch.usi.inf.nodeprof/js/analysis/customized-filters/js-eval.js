@@ -1,5 +1,6 @@
 /*******************************************************************************
  * Copyright 2018 Dynamic Analysis Group, Università della Svizzera Italiana (USI)
+ * Copyright (c) 2018, Oracle and/or its affiliates. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,20 +16,22 @@
  *******************************************************************************/
  //DO NOT INSTRUMENT
 ((function(sandbox){
-  function FieldTest() {
-    var assert = require("assert");
-    function getLocation(sid, iid) {
-      if (process.config.variables.graalvm)
-        // Truffle-Jalangi has unique IIDs
-        return  J$.iidToLocation(iid);
-      else
-        // Jalangi on V8/Node needs sid
-        return J$.iidToLocation(sid, iid);
-    }
+
+  function EvalLike() {
+    const analysis = 'eval-like';
     this.getField = function(iid, base, offset, val, isComputed, isOpAssign, isMethodCall) {
-      console.log("getField "+getLocation(J$.sid, iid)+" in exclusion.js");
+      console.log("%s: getField: %s / %s / %d", analysis, offset, J$.iidToLocation(iid), arguments.length);
+    };
+    this.functionEnter = function (iid, f, dis, args) {
+      if (f.name == '')
+        return;
+      console.log("%s: functionEnter: %s / %s / %d", analysis, f.name, J$.iidToLocation(iid), arguments.length);
     };
   }
-  sandbox.addAnalysis(new FieldTest(), {internal:false, excludes:"testFilter.js,require.js"});
+  sandbox.addAnalysis(new EvalLike(), function filter(source) {
+    if (source.internal && (source.name.includes('function') || source.name.includes('eval')))
+      return true;
+    return false;
+  });
 }
 )(J$));

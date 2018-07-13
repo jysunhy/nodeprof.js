@@ -1,5 +1,6 @@
 /*******************************************************************************
  * Copyright 2018 Dynamic Analysis Group, Università della Svizzera Italiana (USI)
+ * Copyright (c) 2018, Oracle and/or its affiliates. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +23,7 @@ import com.oracle.truffle.api.instrumentation.TruffleInstrument.Env;
 import ch.usi.inf.nodeprof.NodeProfCLI;
 
 public class GlobalConfiguration {
+
     /**
      * global instrumentation scope: "app", "module", and "all".
      *
@@ -52,12 +54,24 @@ public class GlobalConfiguration {
      */
     @CompilationFinal public static boolean DEBUG;
 
+    /**
+     * trace all runtime events as produced by Graal.js
+     */
+    @CompilationFinal public static boolean DEBUG_TRACING;
+    
+    /**
+     * use absolute instead of relative path in logs
+     */
+    @CompilationFinal public static boolean LOG_ABSOLUTE_PATH;
+
     @TruffleBoundary
     public static void setup(Env env) {
+        DEBUG_TRACING = env.getOptions().get(NodeProfCLI.TRACE_EVENTS);
         DEBUG = env.getOptions().get(NodeProfCLI.DEBUG);
         ANALYSIS = env.getOptions().get(NodeProfCLI.ANALYSIS);
         SCOPE = env.getOptions().get(NodeProfCLI.SCOPE);
         EXCL = env.getOptions().get(NodeProfCLI.EXCLUDE_SOURCE);
         IGNORE_JALANGI_EXCEPTION = env.getOptions().get(NodeProfCLI.IGNORE_JALANGI_EXCEPTION);
+        LOG_ABSOLUTE_PATH = env.getOptions().get(NodeProfCLI.LOG_ABSOLUTE_PATH);
     }
 }

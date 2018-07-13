@@ -1,5 +1,6 @@
 /*******************************************************************************
  * Copyright 2018 Dynamic Analysis Group, Università della Svizzera Italiana (USI)
+ * Copyright (c) 2018, Oracle and/or its affiliates. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,7 +40,7 @@ public class Logger {
 
     @TruffleBoundary
     private static void print(PrintStream stream, String tag, SourceSection sourceSection, Object msg) {
-        stream.printf("[%s] %s: %s\n", tag, getSourceSectionId(sourceSection).toString(), msg.toString());
+        stream.printf("[%s] %s: %s\n", tag, SourceMapping.makeLocationString(sourceSection).toString(), msg.toString());
     }
 
     public static void info(Object msg) {
@@ -79,7 +80,7 @@ public class Logger {
     }
 
     public static void warning(Object msg) {
-        print(out, "w", msg);
+        print(err, "w", msg);
     }
 
     public static void error(SourceSection sourceSection, Object msg) {
@@ -92,36 +93,6 @@ public class Logger {
 
     public static void error(Object msg) {
         print(err, "e", msg);
-    }
-
-    @TruffleBoundary
-    public static String getRelative(String path) {
-        if (path.startsWith("/")) {
-            String base = System.getProperty("user.dir");
-            return new File(base).toURI().relativize(new File(path).toURI()).getPath();
-        } else {
-            return path;
-        }
-    }
-
-    @TruffleBoundary
-    public static StringBuilder getSourceSectionId(SourceSection sourceSection) {
-        StringBuilder b = new StringBuilder();
-        String fileName = sourceSection.getSource().getName();
-        boolean isInternal = isInternal(sourceSection.getSource());
-        b.append("(");
-        if (isInternal) {
-            b.append("*");
-        }
-        b.append(getRelative(fileName));
-        b.append(":").append(sourceSection.getStartLine()).append(":").append(sourceSection.getStartColumn()).append(":").append(sourceSection.getEndLine()).append(":").append(
-                        sourceSection.getEndColumn() + 1);
-        b.append(")");
-        return b;
-    }
-
-    private static boolean isInternal(Source src) {
-        return src.isInternal() || src.getPath() == null || src.getPath().equals("");
     }
 
     /**

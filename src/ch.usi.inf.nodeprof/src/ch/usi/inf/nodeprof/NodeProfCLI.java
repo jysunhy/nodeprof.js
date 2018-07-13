@@ -1,5 +1,6 @@
 /*******************************************************************************
  * Copyright 2018 Dynamic Analysis Group, Università della Svizzera Italiana (USI)
+ * Copyright (c) 2018, Oracle and/or its affiliates. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,6 +33,10 @@ public class NodeProfCLI {
     @Option(name = "Debug", help = debugHelp, category = OptionCategory.USER)//
     public static final OptionKey<Boolean> DEBUG = new OptionKey<>(false);
 
+    static final String traceEventsHelp = "Enable low-level instrumentation tracing (expert).";
+    @Option(name = "TraceEvents", help = traceEventsHelp, category = OptionCategory.USER)//
+    public static final OptionKey<Boolean> TRACE_EVENTS = new OptionKey<>(false);
+
     static final String analysisHelp = "Analysis to be enabled in nodeprof (separated by ','). By default NodeProfJalangi";
     @Option(name = "Analysis", help = analysisHelp, category = OptionCategory.USER)//
     public static final OptionKey<String> ANALYSIS = new OptionKey<>("NodeProfJalangi");
@@ -48,12 +53,18 @@ public class NodeProfCLI {
     @Option(name = "IgnoreJalangiException", help = ignoreJExpHelp, category = OptionCategory.USER)//
     public static final OptionKey<Boolean> IGNORE_JALANGI_EXCEPTION = new OptionKey<>(false);
 
+    static final String logAbsPathHelp = "Use absolute instead of relative source path in logs";
+    @Option(name = "LogAbsolutePath", help = logAbsPathHelp, category = OptionCategory.USER)//
+    public static final OptionKey<Boolean> LOG_ABSOLUTE_PATH = new OptionKey<>(false);
+
     public static OptionDescriptor[] ods = {
                     OptionDescriptor.newBuilder(ENABLED, "nodeprof").deprecated(false).help(enabledHelp).category(OptionCategory.USER).build(),
                     OptionDescriptor.newBuilder(DEBUG, "nodeprof.Debug").deprecated(false).help(debugHelp).category(OptionCategory.USER).build(),
+                    OptionDescriptor.newBuilder(TRACE_EVENTS, "nodeprof.TraceEvents").deprecated(false).help(traceEventsHelp).category(OptionCategory.USER).build(),
                     OptionDescriptor.newBuilder(ANALYSIS, "nodeprof.Analysis").deprecated(false).help(analysisHelp).category(OptionCategory.USER).build(),
                     OptionDescriptor.newBuilder(EXCLUDE_SOURCE, "nodeprof.ExcludeSource").deprecated(false).help(exclHelp).category(OptionCategory.USER).build(),
                     OptionDescriptor.newBuilder(SCOPE, "nodeprof.Scope").deprecated(false).help(scopeHelp).category(OptionCategory.USER).build(),
                     OptionDescriptor.newBuilder(IGNORE_JALANGI_EXCEPTION, "nodeprof.IgnoreJalangiException").deprecated(false).help(ignoreJExpHelp).category(OptionCategory.USER).build(),
+                    OptionDescriptor.newBuilder(LOG_ABSOLUTE_PATH, "nodeprof.LogAbsolutePath").deprecated(false).help(logAbsPathHelp).category(OptionCategory.USER).build(),
     };
 }

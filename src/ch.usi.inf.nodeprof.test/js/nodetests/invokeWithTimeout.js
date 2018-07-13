@@ -13,22 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
- //DO NOT INSTRUMENT
-((function(sandbox){
-  function FieldTest() {
-    var assert = require("assert");
-    function getLocation(sid, iid) {
-      if (process.config.variables.graalvm)
-        // Truffle-Jalangi has unique IIDs
-        return  J$.iidToLocation(iid);
-      else
-        // Jalangi on V8/Node needs sid
-        return J$.iidToLocation(sid, iid);
-    }
-    this.getField = function(iid, base, offset, val, isComputed, isOpAssign, isMethodCall) {
-      console.log("getField "+getLocation(J$.sid, iid)+" in exclusion.js");
-    };
-  }
-  sandbox.addAnalysis(new FieldTest(), {internal:false, excludes:"testFilter.js,require.js"});
+
+function foo(){
 }
-)(J$));
+
+foo(1);
+
+foo(2);
+
+setTimeout(function(){foo(3);}, 100);

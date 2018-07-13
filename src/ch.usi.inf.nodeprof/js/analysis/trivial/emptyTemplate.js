@@ -29,26 +29,16 @@
 
         /**
          * This callback is called after the creation of a literal. A literal can be a function
-         * literal, an object literal, an array literal, a number, a string, a boolean, a regular 
+         * literal, an object literal, an array literal, a number, a string, a boolean, a regular
          * expression, null, NaN, Infinity, or undefined.
          **/
         this.literal = function (iid, val, hasGetterSetter) {
             return {result: val};
         };
 
-        //not supported yet
-        this.forinObject = function (iid, val) {
-            return {result: val};
-        };
-
-        //not supported yet
-        this.declare = function (iid, name, val, isArgument, argumentIndex, isCatchParam) {
-            return {result: val};
-        };
-
-        /** 
+        /**
          * These callbacks are called before and after a property of an object is accessed.
-         **/ 
+         **/
         this.getFieldPre = function (iid, base, offset, isComputed, isOpAssign, isMethodCall) {
             return {base: base, offset: offset, skip: false};
         };
@@ -75,23 +65,7 @@
         this.write = function (iid, name, val, lhs, isGlobal, isScriptLocal) {
             return {result: val};
         };
-      
-        //not supported yet
-        this._return = function (iid, val) {
-            return {result: val};
-        };
 
-        //not supported yet
-        this._throw = function (iid, val) {
-            return {result: val};
-        };
-      
-        //not supported yet
-        this._with = function (iid, val) {
-            return {result: val};
-        };
-
-      
         /**
          * These callbacks are called before the execution of a function body starts and after it completes.
          **/
@@ -108,15 +82,6 @@
         };
         this.builtinExit = function (name, returnVal) {
             return {returnVal: returnVal};
-        };
-      
-        //not supported yet
-        this.scriptEnter = function (iid, instrumentedFileName, originalFileName) {
-        };
-
-        //not supported yet
-        this.scriptExit = function (iid, wrappedExceptionVal) {
-            return {wrappedExceptionVal: wrappedExceptionVal, isBacktrack: false};
         };
 
         /**
@@ -146,42 +111,81 @@
             return {result: result};
         };
 
-
-        /**
-         *  These callbacks are called before and after code is executed by eval.
-         **/
-        this.evalPre = function (iid, str) {
-        };
-        this.evalPost = function (iid, str) {
-        };
-
-        /**
-         *  These callabcks are called before and after body of functions defined with the Function constructor are executed.
-         **/
-        this.evalFunctionPre = function(iid, f, base, args) {
-        };
-        this.evalFunctionPost = function(iid, f, base, args, ret) {
-        };
-
-        //not supported yet
-        this.endExpression = function (iid) {
-        };
-
         /**
          * This callback is called when an execution terminates in node.js.
          **/
         this.endExecution = function () {
         };
 
-        //not supported yet
-        this.runInstrumentedFunctionBody = function (iid, f, functionIid, functionSid) {
-            return false;
-        };
+        //for callbacks that are new or different from Jalangi
+        var extraFeatures = true;
+        if(extraFeatures) {
+            /**
+             *  These callbacks are called before and after code is executed by eval.
+             **/
+            this.evalPre = function (iid, str) {
+            };
+            this.evalPost = function (iid, str) {
+            };
 
-        //not supported yet
-        this.onReady = function (cb) {
-            cb();
-        };
+            /**
+             *  These callabcks are called before and after body of functions defined with the Function constructor are executed.
+             **/
+            this.evalFunctionPre = function(iid, f, base, args) {
+            };
+            this.evalFunctionPost = function(iid, f, base, args, ret) {
+            };
+        }
+
+        if(false) {
+            //not supported yet
+            this.forinObject = function (iid, val) {
+            };
+
+            //not supported yet
+            this.declare = function (iid, name, val, isArgument, argumentIndex, isCatchParam) {
+            };
+
+            //not supported yet
+            this._return = function (iid, val) {
+            };
+
+            //not supported yet
+            this._throw = function (iid, val) {
+            };
+
+            //not supported yet
+            this._with = function (iid, val) {
+            };
+
+            //not supported yet
+            this.scriptEnter = function (iid, instrumentedFileName, originalFileName) {
+            };
+
+            //not supported yet
+            this.scriptExit = function (iid, wrappedExceptionVal) {
+            };
+            //not supported yet
+            this.endExpression = function (iid) {
+            };
+
+            //not supported yet
+            this.runInstrumentedFunctionBody = function (iid, f, functionIid, functionSid) {
+            };
+
+            //not supported yet
+            this.onReady = function (cb) {
+                cb();
+            };
+
+            //not supported yet
+            this.instrumentCodePre = function (iid, code, isDirect) {
+            };
+
+            //not supported yet
+            this.instrumentCode = function (iid, newCode, newAst, isDirect) {
+            };
+        }
     }
 
     sandbox.analysis = new MyAnalysis();
