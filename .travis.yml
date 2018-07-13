@@ -16,7 +16,7 @@ before_install:
 
   - sudo apt-get update -qq
 
-  - wget http://h620.inf.usi.ch/nodeprof.js/labsjdk-8u161.tgz
+  - wget http://h620.inf.usi.ch/nodeprof.js/labsjdk-8u172.tgz
   - tar xvf labsjdk-8u161.tgz
   - git clone https://github.com/graalvm/mx.git
 
