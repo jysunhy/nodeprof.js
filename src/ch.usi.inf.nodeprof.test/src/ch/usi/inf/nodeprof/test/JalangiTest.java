@@ -16,11 +16,8 @@
  *******************************************************************************/
 package ch.usi.inf.nodeprof.test;
 
-import ch.usi.inf.nodeprof.jalangi.JalangiAnalysis;
-import com.oracle.js.parser.Source;
-import org.graalvm.polyglot.Context;
-import org.graalvm.polyglot.Value;
-import org.junit.Test;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.FileReader;
@@ -28,8 +25,13 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import org.graalvm.polyglot.Context;
+import org.graalvm.polyglot.Value;
+import org.junit.Test;
+
+import com.oracle.js.parser.Source;
+
+import ch.usi.inf.nodeprof.jalangi.JalangiAnalysis;
 
 
 public class JalangiTest {
@@ -59,6 +61,7 @@ public class JalangiTest {
         assertTrue(v.hasArrayElements());
 
         // test callbacks from template
+        @SuppressWarnings("unchecked")
         List<String> callbacks = v.as(List.class);
         for (String cb : callbacks) {
             if (JalangiAnalysis.unimplementedCallbacks.contains(cb) || JalangiAnalysis.ignoredCallbacks.contains(cb)) {

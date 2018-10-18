@@ -21,14 +21,14 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 
-import ch.usi.inf.nodeprof.ProfiledTagEnum;
-import ch.usi.inf.nodeprof.utils.SourceMapping;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.js.runtime.Evaluator;
 
+import ch.usi.inf.nodeprof.ProfiledTagEnum;
 import ch.usi.inf.nodeprof.utils.GlobalConfiguration;
 import ch.usi.inf.nodeprof.utils.Logger;
+import ch.usi.inf.nodeprof.utils.SourceMapping;
 
 /**
  * Customized SourcePredicate
@@ -96,10 +96,12 @@ public class AnalysisFilterSourceList extends AnalysisFilterBase {
         return addMatchSources(filter, parseExcludeConfig());
     }
 
+    @TruffleBoundary
     public static AnalysisFilterSourceList addMatchSources(final AnalysisFilterSourceList filter, List<String> matchSources) {
         return addMatchSources(filter, new HashSet<>(matchSources));
     }
 
+    @TruffleBoundary
     public static AnalysisFilterSourceList addMatchSources(final AnalysisFilterSourceList filter, HashSet<String> matchSources) {
         HashSet<String> mergedMatchSources = new HashSet<>(matchSources);
         mergedMatchSources.addAll(filter.matchSources);
@@ -119,7 +121,7 @@ public class AnalysisFilterSourceList extends AnalysisFilterBase {
                 res = AnalysisFilterSourceList.app;
                 break;
             default:
-                res = AnalysisFilterSourceList.app;
+                res = AnalysisFilterSourceList.allExceptInternal;
                 break;
         }
         return res;
@@ -202,6 +204,10 @@ public class AnalysisFilterSourceList extends AnalysisFilterBase {
             res = false;
         }
 
+        if (res && loggedSources.add(source)) {
+            Logger.debug("Source filter: " + name + " -> included " + (this.debugHint.isEmpty() ? "" : (" " + this.debugHint)));
+        }
+
         // debug log (once per source) if filter did something
         if (res != filterExcludes && loggedSources.add(source)) {
             // don't log internal if they are being excluded (there are a lot of them)
@@ -213,6 +219,8 @@ public class AnalysisFilterSourceList extends AnalysisFilterBase {
     }
 
     @Override
-    public boolean testTag(final Source source, ProfiledTagEnum tag) { return true; }
+    public boolean testTag(final Source source, ProfiledTagEnum tag) {
+        return true;
+    }
 
 }

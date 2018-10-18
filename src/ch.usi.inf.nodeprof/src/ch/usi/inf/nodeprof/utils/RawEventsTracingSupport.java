@@ -33,6 +33,7 @@ import com.oracle.truffle.api.interop.UnknownIdentifierException;
 import com.oracle.truffle.api.interop.UnsupportedMessageException;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.js.nodes.JavaScriptNode;
+import com.oracle.truffle.js.nodes.instrumentation.JSTags;
 import com.oracle.truffle.js.nodes.instrumentation.JSTags.BinaryExpressionTag;
 import com.oracle.truffle.js.nodes.instrumentation.JSTags.BuiltinRootTag;
 import com.oracle.truffle.js.nodes.instrumentation.JSTags.ControlFlowBlockTag;
@@ -53,27 +54,12 @@ import com.oracle.truffle.js.runtime.JSTruffleOptions;
 import com.oracle.truffle.js.runtime.builtins.JSFunction;
 import com.oracle.truffle.js.runtime.objects.JSObject;
 
+import ch.usi.inf.nodeprof.analysis.AnalysisFilterSourceList;
+import ch.usi.inf.nodeprof.analysis.NodeProfAnalysis;
+
 public class RawEventsTracingSupport {
 
-    public static final Class<?>[] ALL = new Class[]{
-                    ObjectAllocationExpressionTag.class,
-                    BinaryExpressionTag.class,
-                    UnaryExpressionTag.class,
-                    ControlFlowRootTag.class,
-                    WriteVariableExpressionTag.class,
-                    ReadElementExpressionTag.class,
-                    WriteElementExpressionTag.class,
-                    ReadPropertyExpressionTag.class,
-                    WritePropertyExpressionTag.class,
-                    ReadVariableExpressionTag.class,
-                    LiteralExpressionTag.class,
-                    FunctionCallExpressionTag.class,
-                    BuiltinRootTag.class,
-                    EvalCallTag.class,
-                    ControlFlowRootTag.class,
-                    ControlFlowBlockTag.class,
-                    ControlFlowBranchTag.class,
-    };
+    public static final Class<?>[] ALL = JSTags.ALL;
 
     // TODO maybe there's a nicer way to avoid enabling an instrument twice...
     private static boolean enabled = false;
@@ -81,10 +67,10 @@ public class RawEventsTracingSupport {
     @TruffleBoundary
     public static void enable(Instrumenter instrumenter) {
         if (enabled == false) {
-            SourceSectionFilter sourceSectionFilter = SourceSectionFilter.newBuilder().tagIs(ALL).build();
+            SourceSectionFilter sourceSectionFilter = SourceSectionFilter.newBuilder().sourceIs(AnalysisFilterSourceList.getDefault()).tagIs(ALL).build();
             SourceSectionFilter inputGeneratingObjects = SourceSectionFilter.newBuilder().tagIs(
                             StandardTags.ExpressionTag.class,
-                            StandardTags.StatementTag.class).build();
+                            JSTags.InputNodeTag.class).build();
             instrumenter.attachExecutionEventFactory(sourceSectionFilter, inputGeneratingObjects, getFactory());
             Logger.info("Low-level event tracing enabled [SVM: " + JSTruffleOptions.SubstrateVM + "]");
             enabled = true;

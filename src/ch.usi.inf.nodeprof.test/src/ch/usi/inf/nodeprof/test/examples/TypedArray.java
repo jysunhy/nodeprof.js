@@ -1,5 +1,6 @@
 /*******************************************************************************
  * Copyright 2018 Dynamic Analysis Group, Università della Svizzera Italiana (USI)
+ * Copyright (c) 2018, Oracle and/or its affiliates. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -112,8 +113,41 @@ public class TypedArray extends TestableNodeProfAnalysis {
 
     }
 
+    private AnalysisFactory<BaseEventHandlerNode> getInvokeOrNewFactory(boolean isInvoke) {
+        ProfiledTagEnum tag = isInvoke ? ProfiledTagEnum.INVOKE : ProfiledTagEnum.NEW;
+        return new AnalysisFactory<BaseEventHandlerNode>() {
+            @Override
+            public BaseEventHandlerNode create(
+                            EventContext context) {
+                return new FunctionCallEventHandler(context, tag) {
+                    @Child ReportEntryNode getReportNode = ReportEntryNodeGen.create(db, new TypedArrayFactory());
+
+                    @Child IsArrayFunctionNode arrayFunc = IsArrayFunctionNodeGen.create();
+
+                    @Override
+                    public void executePost(VirtualFrame frame,
+                                    Object result, Object[] inputs) {
+                        Object funcObj = getFunction(inputs);
+                        if (funcObj instanceof DynamicObject) {
+                            Object constructor = GlobalObjectCache.getInstance().getArrayConstructor((DynamicObject) funcObj);
+                            if (funcObj == constructor) {
+                                trackAllocation(result, getSourceIID());
+                                addDebugEvent("TA_ARRAY_ALLOC", getSourceIID(), tag);
+                                getReportNode.execute(this.getSourceIID());
+                            }
+                        }
+                    }
+                };
+            }
+        };
+    }
+
     @Override
     public void initCallbacks() {
+
+        this.onCallback(ProfiledTagEnum.INVOKE, getInvokeOrNewFactory(true));
+        this.onCallback(ProfiledTagEnum.NEW, getInvokeOrNewFactory(false));
+
         this.onCallback(ProfiledTagEnum.LITERAL, new AnalysisFactory<BaseEventHandlerNode>() {
             @Override
             public LiteralEventHandler create(EventContext context) {
@@ -128,32 +162,6 @@ public class TypedArray extends TestableNodeProfAnalysis {
                             trackAllocation(result, getSourceIID());
                             TypedArrayReport report = (TypedArrayReport) getReportNode.execute(this.getSourceIID());
                             report.isLiteral = true;
-                        }
-                    }
-                };
-            }
-        });
-
-        this.onCallback(ProfiledTagEnum.INVOKE, new AnalysisFactory<BaseEventHandlerNode>() {
-            @Override
-            public BaseEventHandlerNode create(
-                            EventContext context) {
-                return new FunctionCallEventHandler(context) {
-                    @Child ReportEntryNode getReportNode = ReportEntryNodeGen.create(db, new TypedArrayFactory());
-
-                    @Child IsArrayFunctionNode arrayFunc = IsArrayFunctionNodeGen.create();
-
-                    @Override
-                    public void executePost(VirtualFrame frame,
-                                    Object result, Object[] inputs) {
-                        Object funcObj = getFunction(inputs);
-                        if (funcObj instanceof DynamicObject) {
-                            Object constructor = GlobalObjectCache.getInstance().getArrayConstructor((DynamicObject) funcObj);
-                            if (funcObj == constructor) {
-                                trackAllocation(result, getSourceIID());
-                                addDebugEvent("TA_ARRAY_ALLOC", getSourceIID(), ProfiledTagEnum.INVOKE);
-                                getReportNode.execute(this.getSourceIID());
-                            }
                         }
                     }
                 };

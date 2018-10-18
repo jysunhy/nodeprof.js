@@ -1,5 +1,6 @@
 /*******************************************************************************
  * Copyright 2018 Dynamic Analysis Group, Università della Svizzera Italiana (USI)
+ * Copyright (c) 2018, Oracle and/or its affiliates. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,7 +31,12 @@
 
     function MyAnalysis() {
         this.invokeFunPre = function (iid, f, base, args, isConstructor, isMethod, functionIid, functionSid) {
-            console.log("invokeFunPre @ " + typeof(base) + " " + typeof(f) + " " + getLocation(J$.sid, iid));
+            var logStr = "invokeFunPre @ " + typeof(base) + " " + typeof(f) + " " + getLocation(J$.sid, iid);
+            if (isConstructor)
+              logStr += " isConstructor";
+            if (isMethod)
+              logStr += " isMethod";
+            console.log(logStr);
             argsToString(args);
         };
 

@@ -80,7 +80,7 @@
          **/
         this.builtinEnter = function (name, f, dis, args) {
         };
-        this.builtinExit = function (name, returnVal) {
+        this.builtinExit = function (name, f, dis, args, returnVal, exceptionVal) {
             return {returnVal: returnVal};
         };
 
@@ -131,9 +131,9 @@
             /**
              *  These callabcks are called before and after body of functions defined with the Function constructor are executed.
              **/
-            this.evalFunctionPre = function(iid, f, base, args) {
+            this.evalFunctionPre = function(args) {
             };
-            this.evalFunctionPost = function(iid, f, base, args, ret) {
+            this.evalFunctionPost = function(args, ret, exceptionVal) {
             };
         }
 

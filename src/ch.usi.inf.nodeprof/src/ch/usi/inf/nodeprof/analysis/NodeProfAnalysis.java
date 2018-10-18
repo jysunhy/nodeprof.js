@@ -16,15 +16,24 @@
  *******************************************************************************/
 package ch.usi.inf.nodeprof.analysis;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map.Entry;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
-import com.oracle.truffle.api.instrumentation.*;
+import com.oracle.truffle.api.instrumentation.EventContext;
+import com.oracle.truffle.api.instrumentation.ExecutionEventNode;
+import com.oracle.truffle.api.instrumentation.ExecutionEventNodeFactory;
+import com.oracle.truffle.api.instrumentation.InstrumentableNode;
+import com.oracle.truffle.api.instrumentation.Instrumenter;
+import com.oracle.truffle.api.instrumentation.SourceSectionFilter;
 import com.oracle.truffle.api.instrumentation.SourceSectionFilter.SourcePredicate;
+import com.oracle.truffle.api.instrumentation.StandardTags;
+import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.instrumentation.TruffleInstrument.Env;
+import com.oracle.truffle.api.source.Source;
+import com.oracle.truffle.js.nodes.instrumentation.JSTags;
+import com.oracle.truffle.js.nodes.instrumentation.JSTags.InputNodeTag;
 
 import ch.usi.inf.nodeprof.ProfiledTagEnum;
 import ch.usi.inf.nodeprof.handlers.BaseEventHandlerNode;
@@ -32,7 +41,6 @@ import ch.usi.inf.nodeprof.handlers.MultiEventHandler;
 import ch.usi.inf.nodeprof.jalangi.NodeProfJalangi;
 import ch.usi.inf.nodeprof.utils.GlobalConfiguration;
 import ch.usi.inf.nodeprof.utils.Logger;
-import com.oracle.truffle.api.source.Source;
 
 public abstract class NodeProfAnalysis {
     private final Env env;
@@ -68,35 +76,19 @@ public abstract class NodeProfAnalysis {
     }
 
     @TruffleBoundary
-    protected static NodeProfAnalysis getOrCreateAnalysis(String analysisClass, Instrumenter instrumenter,
+    public static NodeProfAnalysis loadAnalysisFromClass(String analysisClass, Instrumenter instrumenter,
                     Env env) {
-        String[] packageHeaders = {"", "ch.usi.inf.nodeprof.", "ch.usi.inf.nodeprof.examples.", "ch.usi.inf.nodeprof.jalangi."};
         /**
          * create the NodeProfAnalysis using reflection
          */
-        for (String packageHeader : packageHeaders) {
-            try {
-                NodeProfAnalysis newAnalysis = (NodeProfAnalysis) Class.forName(
-                                packageHeader + analysisClass).getConstructor(Instrumenter.class, Env.class).newInstance(instrumenter, env);
-                try {
-                    newAnalysis.onLoad();
-                } catch (Exception e) {
-                    Logger.error("error happens in loading the analysis " + analysisClass);
-                    e.printStackTrace();
-                    System.exit(-1);
-                }
-                newAnalysis.initCallbacks();
-                newAnalysis.analysisReady();
-                return newAnalysis;
-            } catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException | SecurityException | ClassNotFoundException e) {
-                /**
-                 * continue if it is related to reflection because the given analysis name can be
-                 * wrong
-                 */
-                continue;
-            }
-
+        try {
+            NodeProfAnalysis newAnalysis = (NodeProfAnalysis) Class.forName(analysisClass).getConstructor(Instrumenter.class, Env.class).newInstance(instrumenter, env);
+            return newAnalysis;
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.exit(-1);
         }
+
         return null;
     }
 
@@ -125,12 +117,21 @@ public abstract class NodeProfAnalysis {
                     // System.exit(-1);
                 }
             } else {
-                analysis = getOrCreateAnalysis(analysisClass, instrumenter, env);
+                analysis = loadAnalysisFromClass(analysisClass, instrumenter, env);
+                try {
+                    analysis.onLoad();
+                } catch (Exception e) {
+                    Logger.error("error happens in loading the analysis " + analysisClass);
+                    e.printStackTrace();
+                    System.exit(-1);
+                }
+                analysis.initCallbacks();
+                analysis.analysisReady();
             }
             if (analysis != null) {
                 addAnalysis(analysis);
             } else {
-                Logger.debug("loading analysis... " + analysisClass);
+                Logger.debug("failed in loading analysis " + analysisClass);
             }
         }
     }
@@ -227,14 +228,11 @@ public abstract class NodeProfAnalysis {
                 }
             }
 
-            SourceSectionFilter inputFilter = SourceSectionFilter.newBuilder().tagIs(StandardTags.ExpressionTag.class, StandardTags.StatementTag.class).build();
-
             // A built-in node has also the root tag, so we need a separate factory
             if (handlerMapping.containsKey(ProfiledTagEnum.BUILTIN)) {
                 SourceSectionFilter builtinFilter = SourceSectionFilter.newBuilder().tagIs(ProfiledTagEnum.BUILTIN.getTag()).sourceIs(AnalysisFilterSourceList.getBuiltinFilter()).build();
                 getInstrumenter().attachExecutionEventFactory(
                                 builtinFilter,
-                                inputFilter,
                                 new ExecutionEventNodeFactory() {
                                     @TruffleBoundary
                                     public ExecutionEventNode create(EventContext context) {
@@ -253,6 +251,7 @@ public abstract class NodeProfAnalysis {
                 Class<?>[] eventTags = new Class<?>[nonBuiltinCallbacks.size()];
                 nonBuiltinCallbacks.toArray(eventTags);
                 SourceSectionFilter eventFilter = SourceSectionFilter.newBuilder().tagIs(eventTags).sourceIs(sourceFilter).build();
+                SourceSectionFilter inputFilter = SourceSectionFilter.newBuilder().tagIs(StandardTags.ExpressionTag.class, InputNodeTag.class).build();
 
                 getInstrumenter().attachExecutionEventFactory(
                                 eventFilter,
@@ -269,7 +268,8 @@ public abstract class NodeProfAnalysis {
                                                 count += 1;
                                             }
                                         }
-                                        // a node should never have two tags the same time(except for the built-in)
+                                        // a node should never have two tags the same time(except
+                                        // for the built-in)
                                         if (count > 1) {
                                             Logger.error("a node has more than 1 profiling tags!!");
                                             String tags = "";
@@ -344,7 +344,7 @@ public abstract class NodeProfAnalysis {
                         handlers[cnt++] = components[i];
                     }
                 }
-                handler = MultiEventHandler.create(handlers);
+                handler = MultiEventHandler.create(key, handlers);
             }
         }
         if (handler != null) {
@@ -368,11 +368,25 @@ public abstract class NodeProfAnalysis {
     }
 
     @TruffleBoundary
+    public void onSingleTagCallback(Class<? extends Tag> tag, ExecutionEventNodeFactory factory) {
+        onSingleTagCallback(tag, factory, getFilter());
+    }
+
+    @TruffleBoundary
     public void onAllCallback(ExecutionEventNodeFactory factory,
                     SourcePredicate sourcePredicate) {
         getInstrumenter().attachExecutionEventFactory(
                         SourceSectionFilter.newBuilder().tagIs(ProfiledTagEnum.getTags()).sourceIs(sourcePredicate).build(),
-                        SourceSectionFilter.newBuilder().tagIs(StandardTags.ExpressionTag.class, StandardTags.StatementTag.class).build(),
+                        SourceSectionFilter.newBuilder().tagIs(StandardTags.ExpressionTag.class, JSTags.InputNodeTag.class).build(),
+                        factory);
+    }
+
+    @TruffleBoundary
+    public void onSingleTagCallback(Class<? extends Tag> tag, ExecutionEventNodeFactory factory,
+                    SourcePredicate sourcePredicate) {
+        getInstrumenter().attachExecutionEventFactory(
+                        SourceSectionFilter.newBuilder().tagIs(tag).sourceIs(sourcePredicate).build(),
+                        SourceSectionFilter.newBuilder().tagIs(StandardTags.ExpressionTag.class, JSTags.InputNodeTag.class).build(),
                         factory);
     }
 }

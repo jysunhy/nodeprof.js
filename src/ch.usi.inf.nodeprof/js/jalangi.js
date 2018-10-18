@@ -23,7 +23,15 @@ J$={};
   }
   try {
     sandbox.adapter = __jalangiAdapter;
-    sandbox.iidToLocation = function(iid){
+    sandbox.deprecatedIIDUsed = false;
+    sandbox.iidToLocation = function(iid, _deprecatedIID){
+      if(_deprecatedIID) {
+        if(!sandbox.deprecatedIIDUsed){
+          sandbox.deprecatedIIDUsed = true;
+          console.trace("Warning! In NodeProf, iidToLocation only needs the iid (without sid). The iids as you get from the callbacks are unique across files.");
+        }
+        return sandbox.adapter.iidToLocation(_deprecatedIID);
+      }
       return sandbox.adapter.iidToLocation(iid);
     };
     sandbox.getGlobalIID = function(iid) {
@@ -40,12 +48,16 @@ J$={};
   }
 
   sandbox.analyses=[];
+  sandbox.enabledCBs = [];
+  if(process.env.ENABLED_JALANGI_CBS && process.env.ENABLED_JALANGI_CBS.length > 0){
+    sandbox.enabledCBs = process.env.ENABLED_JALANGI_CBS.split(",");
+  }
   sandbox.addAnalysis = function(analysis, filterConfig){
     if(!analysis)
       return;
     sandbox.analyses.push(analysis);
     for(key in analysis){
-      if(typeof analysis[key] == 'function'){
+      if(typeof analysis[key] == 'function' && ( (J$.enabledCBs.length == 0) || (J$.enabledCBs.indexOf(key)>-1))){
         sandbox.adapter.registerCallback(analysis, key, analysis[key]);
       }
     }
@@ -191,8 +203,8 @@ function loadAnalysis(){
     try{
       require(path.resolve(analysis));
     }catch(e){
-      console.log("error loading analysis "+analysis);
-      console.trace(e);
+      console.log("error while loading analysis %s", analysis);
+      console.log(e);
       process.exit(-1);
     }
   });

@@ -120,17 +120,26 @@ public abstract class BaseEventHandlerNode extends Node {
      *
      * @param index
      * @param inputs
-     * @param info
+     * @param inputName
      * @return the value of inputs[index]
      */
-    protected Object assertGetInput(int index, Object[] inputs, String info) {
+    protected Object assertGetInput(int index, Object[] inputs, String inputName) {
+        if (inputs == null) {
+            reportError(index, inputs, "InputsArrayNull");
+            return Undefined.instance;
+        }
         if (index < inputs.length) {
-            return inputs[index];
+            Object result = inputs[index];
+            if (result == null) {
+                result = Undefined.instance;
+                reportError(index, inputs, "InputElementNull " + index);
+            }
+            return result;
         } else {
             /**
              * if the inputs are not there, report the detail and stop the engine.
              */
-            reportError(index, inputs, info);
+            reportError(index, inputs, "MissingInput");
         }
         return Undefined.instance;
     }
@@ -138,13 +147,19 @@ public abstract class BaseEventHandlerNode extends Node {
     @TruffleBoundary
     private void reportError(int index, Object[] inputs, String info) {
         Logger.error(context.getInstrumentedSourceSection(),
-                        "Cannot get input with index '" + index + "' from " +
-                                        context.getInstrumentedNode().getClass().getSimpleName() + " (has " + inputs.length + " input(s))");
+                        "Error[" + info + "] getting inputs at index '" + index + "' from " +
+                                        context.getInstrumentedNode().getClass().getSimpleName() + " (has " + (inputs == null ? 0 : inputs.length) + " input(s))");
 
-        if (!GlobalConfiguration.IGNORE_JALANGI_EXCEPTION) {
+        if (false && !GlobalConfiguration.IGNORE_JALANGI_EXCEPTION) {
             Thread.dumpStack();
             System.exit(-1);
         }
+    }
+
+    public abstract int expectedNumInputs();
+
+    public Object onUnwind(VirtualFrame frame, Object info) {
+        return null;
     }
 
     /**
@@ -152,9 +167,15 @@ public abstract class BaseEventHandlerNode extends Node {
      *
      * @return the index or -1 if no inputs are needed
      */
-    public abstract boolean isLastIndex(int inputCount, int index);
-
-    public Object onUnwind(VirtualFrame frame, Object info) {
-        return null;
+    public final boolean isLastIndex(int inputCount, int index) {
+        int expected = expectedNumInputs();
+        assert inputCount >= expected : Logger.printSourceSectionWithCode(this.getInstrumentedSourceSection()).append(context.getInstrumentedNode().getClass()).append(" ").append(inputCount).append(
+                        " < ").append(expected + " ").toString();
+        if (expected == -1) {
+            // not sure how many inputs
+            return index == inputCount - 1;
+        } else {
+            return index == expected - 1;
+        }
     }
 }
